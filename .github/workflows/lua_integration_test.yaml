@@ -1,0 +1,29 @@
+name: Lua Openkruise Argocd Workload Integration Test
+
+on: [push, pull_request]
+
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Clone Argocd Repository
+      run: | 
+        git clone https://github.com/argoproj/argo-cd
+      
+    - name: Set up Lua environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install lua5.3
+
+    - name: Copy Changes 
+      run: |
+        cp -r apps.kruise.io/ argo-cd/resource_customizations/
+        cp -r rollouts.kruise.io/ argo-cd/resource_customizations/
+
+    - name: Run Lua integration tests
+      run: |
+        cd argo-cd/util/lua
+        go test -v -run TestLuaHealthScript
