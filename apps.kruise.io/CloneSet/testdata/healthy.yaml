@@ -1,34 +1,85 @@
 apiVersion: apps.kruise.io/v1alpha1
 kind: CloneSet
 metadata:
-  name: cloneset-test
-  namespace: kruise
-  generation: 2
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps.kruise.io/v1alpha1","kind":"CloneSet","metadata":{"annotations":{},"labels":{"app":"echo-server","app.kubernetes.io/instance":"rollouts-demo"},"name":"echo-server","namespace":"default"},"spec":{"replicas":10,"selector":{"matchLabels":{"app":"echo-server"}},"template":{"metadata":{"labels":{"app":"echo-server"}},"spec":{"containers":[{"env":[{"name":"PORT","value":"8080"},{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"POD_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"POD_IP","valueFrom":{"fieldRef":{"fieldPath":"status.podIP"}}},{"name":"NODE_NAME","value":"v1"}],"image":"cilium/echoserver:latest","imagePullPolicy":"Always","name":"echo-server","ports":[{"containerPort":8080}],"resources":{"requests":{"cpu":"50m","memory":"50Mi"}}}]}}}}
+  creationTimestamp: "2023-10-19T07:46:10Z"
+  generation: 31
   labels:
-    app: sample
+    app: echo-server
+    app.kubernetes.io/instance: rollouts-demo
+    rollouts.kruise.io/workload-type: cloneset
+  name: echo-server
+  namespace: default
+  resourceVersion: "109375"
+  uid: e811b194-86d9-4016-9156-2951ee0a5d48
 spec:
-  replicas: 1
+  replicas: 10
+  revisionHistoryLimit: 10
+  scaleStrategy: {}
   selector:
     matchLabels:
-      app: sample
+      app: echo-server
   template:
     metadata:
+      creationTimestamp: null
       labels:
-        app: sample
+        app: echo-server
     spec:
       containers:
-      - name: nginx
-        image: nginx:alpine
-
-        
+      - env:
+        - name: PORT
+          value: "8080"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          value: v1
+        image: cilium/echoserver:latest
+        imagePullPolicy: Always
+        name: echo-server
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  updateStrategy:
+    maxSurge: 0
+    maxUnavailable: 20%
+    partition: 0
+    type: ReCreate
 status:
-  observedGeneration: 2
-  replicas: 2
-  updatedReadyReplicas: 2
-  updatedAvailableReplicas: 2
-  conditions:
-  - lastTransitionTime: "2021-09-21T22:35:31Z"
-    message: Deployment has minimum availability.
-    reason: MinimumReplicasAvailable
-    status: 'True'
-    type: FailedScale
+  availableReplicas: 10
+  collisionCount: 0
+  currentRevision: echo-server-798c7499bb
+  expectedUpdatedReplicas: 10
+  labelSelector: app=echo-server
+  observedGeneration: 31
+  readyReplicas: 10
+  replicas: 10
+  updateRevision: echo-server-798c7499bb
+  updatedAvailableReplicas: 10
+  updatedReadyReplicas: 10
+  updatedReplicas: 10
