@@ -20,6 +20,97 @@ ArgoCD, in its default configuration, would consider this application "healthy."
 ## Our Solution
 To address this challenge, we've developed a solution using Lua scripts, which can detect and report the health status of custom workload resources. These Lua scripts, along with corresponding tests, are intended to be contributed back to the ArgoCD project. By doing so, we aim to empower ArgoCD with the ability to recognize and display the health status of advanced workload resources accurately.
 
+## How to use the integration scripts with Argo-cd 
+
+### Requirements : 
+
+1. Kubernetes Cluster or Local minikube installed.
+
+2. Argo-cd installed inside your cluster or local machine.
+
+3. Kruise CRD's installed in your cluster or local machine. 
+
+This README will guide you through the process of integrating Lua scripts with ArgoCD for managing workloads. Lua scripts can help ArgoCD monitor the health status of workloads effectively. In this example, we'll use the following CloneSet:
+
+### Step 1: Install Openkruise as per the instructions given [here](https://openkruise.io/docs/installation/)
+
+### Step 2: Setup the Argo-cd Pipeline or follow [this](https://openkruise.io/docs/best-practices/gitops-with-kruise/#tekton-pipeline--argo-cd) guide 
+
+1. Change the directory to example folders by ```cd example/``` and ```kubectl apply -f argocd.yaml```.
+
+2. You will have an argocd pipeline setup ready to apply and test artifacts.
+
+3. Change the image version or replicas count inside openkruise_workloads/cloneset/cloneset.yaml.
+
+4. Now you will see the changes reflected inside your kubernetes container.
+
+### Step 3: Argo-cd CloneSet Health Check
+
+### Manual way 
+
+Configure CloneSet Argo-cd [Custom CRD Health Checks](https://argo-cd.readthedocs.io/en/stable/operator-manual/health/#custom-health-checks), With this configuration argo-cd is able to perform a healthy check of the CloneSet, such as whether the CloneSet is published and whether the Pods are ready, as follows：
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+  namespace: argocd
+data:
+  resource.customizations.health.apps.kruise.io_CloneSet: |
+  hs={ status = "Progressing", message = "Waiting for initialization" }
+
+  if obj.status ~= nil then
+        
+      if obj.metadata.generation == obj.status.observedGeneration then
+
+          if obj.spec.updateStrategy then
+              if obj.spec.updateStrategy.paused == true then
+                  hs.status = "Suspended"
+                  hs.message = "Cloneset is paused"
+                  return hs
+              elseif obj.spec.updateStrategy.partition ~= 0 then
+                  if obj.status.updatedReplicas >= obj.status.expectedUpdatedReplicas then
+                    hs.status = "Suspended"
+                    hs.message = "Cloneset needs manual intervention"
+                    return hs
+                 end
+              end
+
+          elseif obj.status.updatedAvailableReplicas == obj.status.replicas then
+            hs.status = "Healthy"
+            hs.message = "All Cloneset workloads are ready and updated"    
+            return hs
+        
+          else
+              if obj.status.updatedAvailableReplicas ~= obj.status.replicas then
+                hs.status = "Degraded"
+                hs.message = "Some replicas are not ready or available"
+                return hs
+              end
+            end
+        end
+  end
+
+return hs
+```
+
+### Automated way 
+
+1. Change the directory to example folder by doing ```cd example/```
+
+2. Now run the automation script update-argocd-configmap.sh by doing 
+```bash update-argocd-configmap.sh```
+
+3. This will edit the lua script and will add the neccessary configmap configurations inorder to check cloneset the workload health and display it.
+
+### Step 4: You can view the health conditions of workload with argo-cd UI or CLI
+
+![Preview](https://openkruise.io/assets/images/argo_sync_healthy-47754891eaf67731ab458189bd61ce7b.png)
+
 ## How to Contribute
 We encourage you to be a part of this effort to enhance ArgoCD's capabilities. Here are the steps to get involved:
 
