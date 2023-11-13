@@ -1,0 +1,27 @@
+apiVersion: apps.kruise.io/v1alpha1
+kind: CloneSet
+metadata:
+  name: guestbook-clone
+  labels:
+    app.kubernetes.io/name: guestbook-clone
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guestbook-clone
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: guestbook-clone
+    spec:
+      containers:
+      - name: guestbook
+        image: openkruise/guestbook:v2
+        imagePullPolicy: Always
+        ports:
+        - name: http-server
+          containerPort: 3000
+  updateStrategy:
+    type: InPlaceIfPossible
+    paused: true
+    maxUnavailable: 3

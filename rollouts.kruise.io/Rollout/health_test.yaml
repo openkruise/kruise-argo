@@ -15,3 +15,7 @@ tests:
       status: Suspended
       message: "Rollout is Paused need manual intervention"
     inputPath: testdata/suspended.yaml
+  - healthStatus:
+      status: Degraded
+      message: "Workload Not found"
+    inputPath: testdata/no_workload_found.yaml

@@ -1,0 +1,29 @@
+apiVersion: rollouts.kruise.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollouts-demo
+  namespace: default
+  annotations:
+    rollouts.kruise.io/rolling-style: partition
+  generation: 5
+spec:
+  objectRef:
+    workloadRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: workload-demo
+  strategy:
+    canary:
+      steps:
+      - replicas: 1
+        pause:
+          duration: 0
+      - replicas: 50%
+        pause:
+          duration: 0
+      - replicas: 100%
+
+status:
+  message: Workload Not found
+  observedGeneration: 5
+  phase: Initial
